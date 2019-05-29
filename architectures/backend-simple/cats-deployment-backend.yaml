@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cats-d-b
+  labels:
+    app: cats-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cats-b
+  template:
+    metadata:
+      labels:
+        app: cats-b
+    spec:
+      containers:
+      - name: backend
+        image: jmnnr/soa-k8s-backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9999
+        resources:
+          limits:
+            cpu: 0.1
+            memory: "400Mi"

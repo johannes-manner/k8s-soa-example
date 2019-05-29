@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: ReplicaSet
+metadata:
+  name: cats-rs
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: cats
+        version: "1"
+    spec:
+      containers:
+        - name: backend
+          image: "jmnnr/soa-k8s-backend:latest"
+          imagePullPolicy: IfNotPresent

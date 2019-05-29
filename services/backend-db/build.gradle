@@ -1,0 +1,49 @@
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
+    }
+}
+
+dependencies {
+    compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.28'
+    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-jdk-http', version: '2.28'
+    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet-core', version: '2.28'
+    compile group: 'org.glassfish.jersey.media', name: 'jersey-media-moxy', version: '2.28'
+    // needed since version 2.26 and newer are not backward compatible
+    // https://stackoverflow.com/questions/44088493/jersey-stopped-working-with-injectionmanagerfactory-not-found
+    compile group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.28'
+
+    compile 'org.glassfish.jersey.core:jersey-client:2.28'
+    
+    // for integration with mongo-db
+    compile group: 'org.mongodb', name: 'mongodb-driver', version: '3.10.2'
+
+    testCompile 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory:2.28'
+}
+
+mainClassName = "de.uniba.dsg.jaxrs.JaxRsServer"
+
+shadowJar {
+    mergeServiceFiles()
+}
+
+compileJava.dependsOn clean
