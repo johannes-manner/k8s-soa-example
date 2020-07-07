@@ -12,11 +12,14 @@ spec:
   selector:
     app: db
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mongod
 spec:
+  selector:
+    matchLabels:
+      app: db
   serviceName: mongodb-service
   replicas: 1
   template:

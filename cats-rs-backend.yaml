@@ -1,13 +1,17 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
   name: cats-rs
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      animal: cat
   template:
     metadata:
       labels:
         app: cats
+        animal: cat
         version: "1"
     spec:
       containers:

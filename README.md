@@ -39,7 +39,7 @@ To verify, that your image is visible for minikube, execute the following comman
 $ docker images
 ```
 
-Your output should look like the following:
+Your output should look like the following (your output may be differ, especially the version numbers of the tags):
 
 | REPOSITORY                              | TAG               | IMAGE ID     | CREATED        | SIZE   |
 |-----------------------------------------|-------------------|--------------|----------------|--------|
@@ -66,12 +66,13 @@ Now you are ready to deploy the cats image on K8s!
 
 ### Via kubectl commands - starting a single container in a pod
 
-First step is to create a deployment and run the backend image. Since the image is locally available there is an additional option to only pull images if they are not present locally.
+First step is to create a deployment and run the backend image.
 
 After the deployment *catz* is created the master starts to create a pod with the *cats* image and schedules the pod on a node. Hint: Minikube has only a single node where all the pods are running on.
 
 ```shell
-$ kubectl run catz --image=jmnnr/soa-k8s-backend --image-pull-policy=IfNotPresent --port=12345
+$ kubectl create deployment catz --image=jmnnr/soa-k8s-backend
+deployment.apps/catz created
 ```
 
 After the deployment is created, you can view the available pods via the get kubectl command. Minikube adds a unique suffix to the deployment name as a pod name.
@@ -92,18 +93,19 @@ Before we expose the service, we can check, if our service works correctly. Ther
 
 ```shell
 $ kubectl describe pods
-Name:               catz-76d67b6659-2245t
-Namespace:          default
-Priority:           0
-PriorityClassName:  <none>
-Node:               minikube/10.0.2.15
-Start Time:         Tue, 21 May 2019 11:22:26 +0200
-Labels:             pod-template-hash=76d67b6659
-                    run=catz
-Annotations:        <none>
-Status:             Running
-IP:                 172.17.0.5
-Controlled By:      ReplicaSet/catz-76d67b6659
+Name:         catz-58dc8dfdd7-7l8qb
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.99.101
+Start Time:   Tue, 07 Jul 2020 16:45:24 +0200
+Labels:       app=catz
+              pod-template-hash=58dc8dfdd7
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.5
+IPs:
+  IP:           172.17.0.5
+Controlled By:  ReplicaSet/catz-58dc8dfdd7
 Containers:
 ....
 ```
@@ -155,6 +157,17 @@ To get the service Endpoint, which is externally accessible use the following mi
 $ minikube service catz --url
 ```
 
+So now you have different ways to access your REST resource:
+
+```shell
+$ http://minikube:31916/cats          DNS resolution, minikube is the node name.
+$ http://MACHINE-IP:31916/cats        Via the $ service --url command.
+$ minikube ssh
+  $ curl 172.17.0.5:9999/cats         Port on the pod.
+  $ curl 10.99.220.194:8989/cats      Service IP and mapped port.
+  $ curl minikube:31916/cats          DNS resolution, minikube is the node name.
+```
+
 #### Clean-up
 
 To clean up, we can delete the service and the deployment via:
@@ -162,7 +175,7 @@ To clean up, we can delete the service and the deployment via:
 $ kubectl delete services catz
 service "catz" deleted
 $ kubectl delete deployments catz
-deployment.extensions "catz" deleted
+deployment.apps "catz" deleted
 ```
 
 ### Via declarative configuration files - starting replicated Containers
@@ -171,6 +184,7 @@ In the previous example, we used an imperative way to get a single container wit
 
 ```shell
 $ kubectl apply -f cats-rs-backend.yaml
+replicaset.apps/cats-rs created
 ```
 
 We created a replica set with 2 instances. Play a bit around with the kubectl commands *get pods*, *describe pods* etc.
@@ -179,23 +193,27 @@ We created a replica set with 2 instances. Play a bit around with the kubectl co
 $ kubectl describe rs cats-rs
 Name:         cats-rs
 Namespace:    default
-Selector:     app=cats,version=1
-Labels:       app=cats
-              version=1
-Replicas:     2 current / 2 desired
+Selector:     animal=cat
+Labels:       <none>
+Annotations:  Replicas:  2 current / 2 desired
 Pods Status:  2 Running / 0 Waiting / 0 Succeeded / 0 Failed
 Pod Template:
-  Labels:  app=cats
+  Labels:  animal=cat
+           app=cats
            version=1
   Containers:
-   cats:
-    Image:        cats
-    ...
+   backend:
+    Image:        jmnnr/soa-k8s-backend:latest
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
 Events:
   Type    Reason            Age   From                   Message
   ----    ------            ----  ----                   -------
-  Normal  SuccessfulCreate  9s    replicaset-controller  Created pod: cats-rs-7577v
-  Normal  SuccessfulCreate  9s    replicaset-controller  Created pod: cats-rs-cmnwc
+  Normal  SuccessfulCreate  90m   replicaset-controller  Created pod: cats-rs-v8mw7
+  Normal  SuccessfulCreate  90m   replicaset-controller  Created pod: cats-rs-44xnk
 ```
 
 You can see that the replica set uses *label selectors* to group all the pods, which are part in this replica set.
@@ -214,7 +232,7 @@ ReplicaSets are a first step to a self-healing system, but there is another opti
 
 ```shell
 $ kubectl delete -f cats-rs-backend.yaml
-replicaset.extensions "cats-rs" deleted
+replicaset.apps "cats-rs" deleted
 
 $ kubectl apply -f architectures/backend-simple/cats-deployment-backend.yaml
 deployment.apps/cats-d-b created
@@ -224,7 +242,7 @@ In this configuration, a single pod is created running the cats image. A Replica
 
 ```shell
 $ kubectl apply -f architectures/backend-simple/cats-service-backend.yaml
-service/cat-service created
+service/cat-service-backend created
 ```
 
 The backend service in only accessible within the minikube cluster.
@@ -271,7 +289,7 @@ $ exit
 
 After this refresh your local browser and the first cat *Garfield* was deleted.
 
-As a summary: Your backend is only accessible within your K8s cluster. The frontend only exposes a subset of the functionality of your backend. A replication controller checks the state of your pods and take actions if necessary. The service hides the underlying pods and allows a stable interface to work with. Your frontend is the only component which is accessible on your local machine. There is also the same approach with a replication controller and a service interface.
+As a summary: Your backend is only accessible within your K8s cluster. The frontend only exposes a subset of the functionality of your backend. A replication controller checks the state of your pods and takes actions if necessary. The service hides the underlying pods and allows a stable interface to work with. Your frontend is the only component which is accessible on your local machine. There is also the same approach with a replication controller and a service interface.
 
 #### Inconsistent state within backend
 
