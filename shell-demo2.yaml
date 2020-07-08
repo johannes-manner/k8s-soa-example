@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: shell-demo
+  name: shell-demo2
 spec:
   volumes:
     - name: hello-storage
@@ -15,11 +15,3 @@ spec:
     volumeMounts:
     - name: hello-storage
       mountPath: /data/hello/container
-    env:
-    - name: DEMO
-      value: "Test it"
-    - name: SERVER_URI
-      valueFrom:
-        configMapKeyRef:
-          name: special-config       # name of the config map
-          key: serverUri

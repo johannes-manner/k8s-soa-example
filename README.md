@@ -102,6 +102,23 @@ $ kubectl describe pods
 Check also the [docs](https://kubernetes.io/docs/concepts/storage/persistent-volumes/
 ).
 
+### Config Maps and Environment Variables
+
+Next we define environment variables.
+Look into *config-map.yaml* and apply the file.
+Also apply the pod *shell-demo.yaml* configuration to minikube.
+Then check the content of the environment file via *echo* within the container.
+
+```shell
+$ kubectl apply -f config-map.yaml
+$ kubectl describe configmaps
+$ kubectl apply -f shell-demo.yaml
+$ kubectl attach shell-demo -c hello-spec -i -t
+```
+
+Change the content of config map parameter and exit the *hello-spec* container.
+See whats happened :)
+
 ### Building *cats* Image
 
 After this introduction and the facility to work with a container pod as in a native docker environment, we can build the *frontend* and *backend* images. Thanks to [Stefan](https://github.com/stefan-kolb/jaxrs-samples) for providing the example.
