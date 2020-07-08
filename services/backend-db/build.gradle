@@ -31,5 +31,8 @@ dependencies {
     compile "org.glassfish.jaxb:jaxb-runtime:2.3.2"
 //    testCompile 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory:2.30.1'
 
+    // for mongo db integration
+    compile group: 'org.mongodb', name: 'mongodb-driver', version: '3.12.5'
+
 }
 mainClassName = "de.uniba.dsg.jaxrs.JaxRsServer"

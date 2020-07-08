@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: PersistentVolume     # administrator's task
+metadata:
+  name: hello-pv
+  labels:
+    stage: hello           # later used in the PVC
+spec:
+  storageClassName: local-storage
+  accessModes:  
+    - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  hostPath:
+    path: /custom/data/hello/
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hello-pvc
+spec:
+  storageClassName: local-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi          # less then the PV, otherwise the mapping is not successfull

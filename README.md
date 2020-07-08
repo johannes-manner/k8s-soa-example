@@ -8,7 +8,7 @@ You need also a running docker environment to do this hands-on. So please instal
 
 ## Running the cat service
 
-### Starting minikube and building *cats* image
+### Starting minikube
 
 Start your docker engine first.
 
@@ -24,8 +24,87 @@ For local images, minikube needs a docker environment to *pull* images from. So 
 ```shell
 $ eval $(minikube docker-env)
 ```
+### Using a simple Linux Distribution for Debugging
 
-After this, we can build the *frontend* and *backend* images. Thanks to [Stefan](https://github.com/stefan-kolb/jaxrs-samples) for providing the example.
+We start with the same functionality as in our [docker tutorial](https://github.com/uniba-dsg/docker-tutorial).
+We start an interactive container within a pod. We use the alpine image again.
+This mechanism can also be used for debugging and some sort of monitoring your system, when you want to perform *curl* or other commands to other pods within the system. Remember: the least deployable unit in K8s is a pod, not a container!!
+It is also sometimes beneficial to have a lightweight pod in your cluster for debugging purposes.
+
+```shell
+$ kubectl run hello --image=alpine -it -- ash
+/ # uptime
+/ # apk add curl
+
+$ kubectl delete pod hello
+```
+
+With Ctrl+p and Ctrl+q you can leave the container and pod.
+There will be a hint within the console and a command to reconnect to the pod again.
+With the delete command you can delete your imperatively specified pod.
+
+I highly recommend to use the [Kubernetes Command Docu](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-strong-getting-started-strong-) for further runtime and configuration options.
+
+Since we know, that imperative configuration is limited, we investigate the declarative specification possibilities.
+K8s uses YAML files.
+A simple YAML file, where we specify the properties of the pod we created previously looks like the following:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell-demo          # name of the pod
+spec:
+  containers:
+  - name: hello-spec        # name of the container within this pod
+    image: alpine:latest    # As in our docker tutorial, use this lightweight linux distribution
+    stdin: true             # Keep stdin open on the container(s) in the pod, even if nothing is attached.
+    tty: true               # Allocated a TTY for each container in the pod.
+```
+
+So the first command applies the configuration and Kubernetes handles the creation of resources etc. for us.
+With the second command, we can attach to the *shell-demo* pod and within this pod (you know that more than one container can run inside a pod) to the *hello-spec* container.
+The last command deletes the created artifacts of the configuration file.
+```shell
+$ kubectl apply -f shell-demo.yaml
+$ kubectl attach shell-demo -c hello-spec -i -t
+$ kubectl delete -f shell-demo.yaml
+```
+
+### Simple Storage Example
+
+As told in the lecture, persistent storage subsystem has two components PersistentVolumes (PV) and PersistenVolumeClaims (PVC) to decouple the two concepts.
+So you need to specify PV first, then specify a PVC, where the K8s manager dynamically binds a suitable PV.
+Then you can mount this PVC to your container and store data persistently.
+Play a bit around with the following files and commands.
+
+```shell
+$ kubectl apply -f pv-demo.yaml
+$ kubectl get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                               STORAGECLASS    REASON   AGE
+hello-pv                                   5Gi        RWO            Retain           Bound    default/hello-pvc                                   local-storage            2m31s
+
+$ kubectl apply -f shell-demo.yaml
+
+$ kubectl get pvc
+NAME                                        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+hello-pvc                                   Bound    pvc-e049c1b5-771e-4a96-94a3-cee05ae60617   2Gi        RWO            standard       42s
+
+$ kubectl describe pods
+ - you will see the volume claim here
+
+ $ kubectl attach shell-demo -c hello-spec -i -t
+   / cd data/hello/container
+   /data/hello/container  echo "test" >> minikube.text.txt
+ Leave container and look into minikube /custom/data/hello directory
+```
+
+Check also the [docs](https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+).
+
+### Building *cats* Image
+
+After this introduction and the facility to work with a container pod as in a native docker environment, we can build the *frontend* and *backend* images. Thanks to [Stefan](https://github.com/stefan-kolb/jaxrs-samples) for providing the example.
 
 ```shell
 $ docker build services/backend/. -t jmnnr/soa-k8s-backend

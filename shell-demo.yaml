@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell-demo
+spec:
+  volumes:
+    - name: hello-storage
+      persistentVolumeClaim:
+        claimName: hello-pvc
+  containers:
+  - name: hello-spec
+    image: alpine:latest
+    stdin: true             # Keep stdin open on the container(s) in the pod, even if nothing is attached.
+    tty: true               # Allocated a TTY for each container in the pod.
+    volumeMounts:
+    - name: hello-storage
+      mountPath: /data/hello/container
