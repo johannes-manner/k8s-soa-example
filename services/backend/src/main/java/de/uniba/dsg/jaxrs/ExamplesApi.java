@@ -12,6 +12,8 @@ import javax.ws.rs.core.MediaType;
 import de.uniba.dsg.jaxrs.delete.Delete;
 import de.uniba.dsg.jaxrs.get.ReadAll;
 import de.uniba.dsg.jaxrs.get.Search;
+import de.uniba.dsg.jaxrs.health.Liveness;
+import de.uniba.dsg.jaxrs.health.Readiness;
 import de.uniba.dsg.jaxrs.post.Create;
 import de.uniba.dsg.jaxrs.put.Update;
 import de.uniba.dsg.jaxrs.get.ReadSingle;
@@ -29,6 +31,8 @@ public class ExamplesApi extends Application {
         resources.add(Delete.class);
         resources.add(Create.class);
         resources.add(Update.class);
+        resources.add(Liveness.class);
+        resources.add(Readiness.class);
 
         return resources;
     }

@@ -22,4 +22,4 @@ spec:
       valueFrom:
         configMapKeyRef:
           name: special-config       # name of the config map
-          key: serverUri
+          key: serverUri             # key of the config map property

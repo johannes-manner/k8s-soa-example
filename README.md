@@ -66,9 +66,10 @@ So the first command applies the configuration and Kubernetes handles the creati
 With the second command, we can attach to the *shell-demo* pod and within this pod (you know that more than one container can run inside a pod) to the *hello-spec* container.
 The last command deletes the created artifacts of the configuration file.
 ```shell
-$ kubectl apply -f shell-demo.yaml
+echo "<config>" >> pod.yaml
+$ kubectl apply -f pod.yaml
 $ kubectl attach shell-demo -c hello-spec -i -t
-$ kubectl delete -f shell-demo.yaml
+$ kubectl delete -f pod.yaml
 ```
 
 ### Simple Storage Example
@@ -323,6 +324,9 @@ Then execute the following command again, which declaratively scales the number 
 ```shell
 $ kubectl apply -f cats-rs-backend.yaml
 ```
+
+We also included Liveness and Readiness checks.
+To investigate these, use the *kubectl get pods* and *kubectl logs --follow <pod-name>* command.
 
 ReplicaSets are a first step to a self-healing system, but there is another option to specify a ReplicaSet implicitly and also add the possiblity to ship new versions of your software with zero downtime: Deployments. Therefore, we delete the ReplicaSet and create the deployment:
 
