@@ -85,7 +85,7 @@ $ kubectl get pv
 NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                               STORAGECLASS    REASON   AGE
 hello-pv                                   5Gi        RWO            Retain           Bound    default/hello-pvc                                   local-storage            2m31s
 
-$ kubectl apply -f shell-demo.yaml
+$ kubectl apply -f shell-demo2.yaml
 
 $ kubectl get pvc
 NAME                                        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
@@ -94,7 +94,7 @@ hello-pvc                                   Bound    pvc-e049c1b5-771e-4a96-94a3
 $ kubectl describe pods
  - you will see the volume claim here
 
- $ kubectl attach shell-demo -c hello-spec -i -t
+ $ kubectl attach shell-demo2 -c hello-spec -i -t
    / cd data/hello/container
    /data/hello/container  echo "test" >> minikube.text.txt
  Leave container and look into minikube /custom/data/hello directory
