@@ -4,7 +4,10 @@
 
 We use [minikube](https://github.com/kubernetes/minikube) as a local K8s environment to get familiar with the K8s concepts. See all the installation details and information on the linked GitHub page.
 
-You need also a running docker environment to do this hands-on. So please install docker as well. We recommend to use the [Docker Toolbox](https://docs.docker.com/toolbox/overview/), since Minikube works best with VirtualBox. Hyper-V causes problems under Windows when using Docker and Minikube in combination.
+You need also a running docker environment to do this hands-on. So please install docker as well.
+When you meet the system requirements for [Docker Desktop](https://docs.docker.com/desktop/) we recomment to install it and configure the [WSL2](https://docs.docker.com/docker-for-windows/install/#wsl-2-backend) backend.
+
+If you do not meet the system requirements for docker desktop, we recommend to use the [Docker Toolbox](https://docs.docker.com/toolbox/overview/), since Minikube works best with VirtualBox. Hyper-V causes problems under Windows when using Docker and Minikube in combination.
 
 ## Running the cat service
 
@@ -207,7 +210,7 @@ Containers:
 ....
 ```
 
-Then we can connect to our minikube VM via ssh and execute a curl command to get the cats list of our service.
+Then we can connect to our minikube VM via ssh command and execute a curl command to get the cats list of our service.
 
 ```
 $ minikube ssh
@@ -257,7 +260,7 @@ $ minikube service catz --url
 So now you have different ways to access your REST resource:
 
 ```shell
-$ http://minikube:31916/cats          DNS resolution, minikube is the node name.
+$ http://minikube:31916/cats          DNS resolution, minikube is the node name. Dependent on the config (may not work).
 $ http://MACHINE-IP:31916/cats        Via the $ service --url command.
 $ minikube ssh
   $ curl 172.17.0.5:9999/cats         Port on the pod.
