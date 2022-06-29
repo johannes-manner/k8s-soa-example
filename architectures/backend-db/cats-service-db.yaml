@@ -43,10 +43,9 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: mongodb-persistent-storage-claim
-      annotations:
-        volume.beta.kubernetes.io/storage-class: "standard"
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      storageClassName: local-storage
       resources:
         requests:
           storage: 1Gi

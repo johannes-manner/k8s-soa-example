@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolume     # administrator's task
+metadata:
+  name: local-storage-pv
+  labels:
+    stage: local-storage   
+spec:
+  storageClassName: local-storage   # later used in the PVC
+  accessModes:  
+    - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  hostPath:
+    path: /mongo/data

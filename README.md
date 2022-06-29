@@ -2,16 +2,28 @@
 
 ## Installing environment
 
-We use [minikube](https://github.com/kubernetes/minikube) as a local K8s environment to get familiar with the K8s concepts. See all the installation details and information on the linked GitHub page.
+You need a running docker environment to do this hands-on. So please install docker as well.
+When you meet the system requirements for [Docker Desktop](https://docs.docker.com/desktop/) we recommend to install it.
+Additionally, if necessary, onfigure the [WSL2](https://docs.docker.com/docker-for-windows/install/#wsl-2-backend) backend under Windows.
 
-You need also a running docker environment to do this hands-on. So please install docker as well.
-When you meet the system requirements for [Docker Desktop](https://docs.docker.com/desktop/) we recomment to install it and configure the [WSL2](https://docs.docker.com/docker-for-windows/install/#wsl-2-backend) backend.
-
-If you do not meet the system requirements for docker desktop, we recommend to use the [Docker Toolbox](https://docs.docker.com/toolbox/overview/), since Minikube works best with VirtualBox. Hyper-V causes problems under Windows when using Docker and Minikube in combination.
+There are now two options to play around with K8s on your machine.
+ - Option 1: Using the DockerDesktop K8s feature. Under Windows and MacOS this is the preferred option since 
+you can also do proper networking and have access on your host machine. The tutorial is based on
+minikube in a VirtualBox VM, but the content is also valid for having K8s running with DockerDesktop. 
+Some infos and hints how to get it work and configured are present [here](https://docs.docker.com/desktop/kubernetes/). 
+ - Option 2: For the tutorial, we use [minikube](https://github.com/kubernetes/minikube) as a local K8s environment to get familiar with the K8s concepts. See all the installation details and information on the linked GitHub page.
+On Linux, you can also use minikube for playing around with K8s having a dedicated, single-node distribution.
 
 ## Running the cat service
 
-### Starting minikube
+### Option 1: DockerDesktop's K8s
+
+Go to Settings, Kubernetes and Enable Kubernetes.
+It will install also `kubectl` on your machine. Make sure that it is also included in your `PATH`.
+Set also the context to work with DockerDesktop. More infos are presented here with a detailed step-by-step
+[introduction](https://docs.docker.com/desktop/kubernetes/).
+
+### Option 2: Starting minikube
 
 Start your docker engine first.
 
@@ -27,6 +39,7 @@ For local images, minikube needs a docker environment to *pull* images from. So 
 ```shell
 $ eval $(minikube docker-env)
 ```
+
 ### Using a simple Linux Distribution for Debugging
 
 We start with the same functionality as in our [docker tutorial](https://github.com/uniba-dsg/docker-tutorial).
@@ -34,6 +47,7 @@ We start an interactive container within a pod. We use the alpine image again.
 This mechanism can also be used for debugging and some sort of monitoring your system, when you want to perform *curl* or other commands to other pods within the system. Remember: the least deployable unit in K8s is a pod, not a container!!
 It is also sometimes beneficial to have a lightweight pod in your cluster for debugging purposes.
 
+NOTE: If you get an error under Windows that your device is "Unable to use a TTY" prefix the kubectl command with `winpty`.
 ```shell
 $ kubectl run hello --image=alpine -it -- ash
 / # uptime
@@ -209,8 +223,7 @@ Controlled By:  ReplicaSet/catz-58dc8dfdd7
 Containers:
 ....
 ```
-
-Then we can connect to our minikube VM via ssh command and execute a curl command to get the cats list of our service.
+#### Option 2: In case of minikube, we can connect to our minikube VM via ssh command and execute a curl command to get the cats list of our service.
 
 ```
 $ minikube ssh
@@ -225,6 +238,34 @@ $ curl 172.17.0.5:9999/cats
 [{"id":1,"name":"Garfield",...}]
 ```
 As you might remember, our implemented service exposes the service on port 9999 and with the path parameter *cats*.
+
+#### Option 1: In case of DockerDesktop, we could start another interactive pod to be within the K8s network. This allows us to curl the endpoint of our cats service.
+
+```shell
+$ kubectl describe pods
+Name:         catz-79d9d4d968-vhthz
+Namespace:    default
+Priority:     0
+Node:         docker-desktop/192.168.65.4
+Start Time:   Wed, 29 Jun 2022 10:22:19 +0200
+Labels:       app=catz
+              pod-template-hash=79d9d4d968
+Annotations:  <none>
+Status:       Running
+IP:           10.1.0.8
+IPs:
+  IP:           10.1.0.8
+Controlled By:  ReplicaSet/catz-79d9d4d968
+Containers:
+....
+
+$ kubectl run hello --image=alpine -it -- ash
+/ # apk add curl
+/ # curl 10.1.0.8:9999/cats
+/ # exit
+```
+
+This works also well :)
 
 No we can expose a service and use one of the service types. We use a load balancer in this example.
 
@@ -257,15 +298,22 @@ To get the service Endpoint, which is externally accessible use the following mi
 $ minikube service catz --url
 ```
 
+For DockerDesktop, the service URL is typically localhost and the port we exposed, in our case 8989.
+The load balancer ingress is in this case also specified.
+
 So now you have different ways to access your REST resource:
 
 ```shell
+For minikube
 $ http://minikube:31916/cats          DNS resolution, minikube is the node name. Dependent on the config (may not work).
 $ http://MACHINE-IP:31916/cats        Via the $ service --url command.
 $ minikube ssh
   $ curl 172.17.0.5:9999/cats         Port on the pod.
   $ curl 10.99.220.194:8989/cats      Service IP and mapped port.
   $ curl minikube:31916/cats          DNS resolution, minikube is the node name.
+
+For DockerDesktop
+$ http://localhost:8989/cats          Ingress controller is per default localhost
 ```
 
 #### Clean-up
@@ -328,8 +376,7 @@ Then execute the following command again, which declaratively scales the number 
 $ kubectl apply -f cats-rs-backend.yaml
 ```
 
-We also included Liveness and Readiness checks.
-To investigate these, use the *kubectl get pods* and *kubectl logs --follow <pod-name>* command.
+To investigate logs from a pod, use the *kubectl get pods* and *kubectl logs --follow <pod-name>* command.
 
 ReplicaSets are a first step to a self-healing system, but there is another option to specify a ReplicaSet implicitly and also add the possiblity to ship new versions of your software with zero downtime: Deployments. Therefore, we delete the ReplicaSet and create the deployment:
 
@@ -348,7 +395,7 @@ $ kubectl apply -f architectures/backend-simple/cats-service-backend.yaml
 service/cat-service-backend created
 ```
 
-The backend service in only accessible within the minikube cluster.
+The backend service in only accessible within the minikube cluster repectively docker network.
 For accessing the service and creating a simple output of our data, we use another deployment and a second service, which connects to the previously deployed backend.
 
 ```shell
@@ -378,6 +425,9 @@ $ minikube service cat-service-frontend --url
 ```
 
 Use the result of the last command and add **/index.php** to see the functionality of your service.
+
+When using DockerDesktop you can use `http://localhost:8989/` for accessing the frontend service.
+
 Only the frontend is now accessible from your host via your browser. If you want to delete a cat, use the following commands via your shell or use the delete button in the web browser:
 
 ```shell
@@ -427,6 +477,18 @@ $ kubectl apply -f architectures/
 
 The first command deploys the backend with the mongo db and the second `kubectl` command deploys the frontend. When getting the dashboard url, you see following interface:
 <img src="pics/dashboard.pdf" alt="Minikube Dashboard"/>
+
+In case of DockerDesktop, you have to deploy the dashboard web-ui within your cluster.
+Look also at the following sources: [Dashboard Docu](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/), [User Creation for Accessing Dashboard](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md). 
+
+```shell
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
+$ kubectl apply -f dashboard-adminuser.yaml
+$ kubectl apply -f role-binding.yaml
+$ kubectl -n kubernetes-dashboard create token admin-user  # generates a token, use this for the bearer authentication
+$ kubectl proxy
+http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+```
 
 If you request for all your pods, you see a single instance for the frontend (cats-d-f-#####), backend (cats-d-b-db-#####) and the database (mongod-0). Now you can scale your backend to 2 or 3 replicas and send a few request via your frontend to the backend.
 In the following you can get the logs from your backend pods and see how many requests each backend instance has sent to the database.
